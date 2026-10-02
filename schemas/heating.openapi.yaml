@@ -1,0 +1,87 @@
+openapi: 3.0.3
+info:
+  title: Отопление
+  version: 1.0.0
+  description: Команды климату и текущее состояние отопления.
+servers:
+  - url: http://heating:8080
+paths:
+  /commands:
+    post:
+      summary: Выполнить команду отопления
+      operationId: executeHeatingCommand
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HeatingCommand"
+      responses:
+        "200":
+          description: Состояние после команды
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HeatingState"
+        "401":
+          description: Токен недействителен
+  /devices/{deviceId}:
+    get:
+      summary: Текущее состояние устройства
+      operationId: getHeatingState
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/DeviceId"
+      responses:
+        "200":
+          description: Состояние отопления
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HeatingState"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  parameters:
+    DeviceId:
+      name: deviceId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    HeatingCommand:
+      type: object
+      required: [device_id, type]
+      properties:
+        device_id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [TURN_ON, TURN_OFF, SET_TEMPERATURE]
+        temperature:
+          type: number
+          format: float
+          description: Нужна только для SET_TEMPERATURE
+    HeatingState:
+      type: object
+      required: [device_id, enabled, target_temperature]
+      properties:
+        device_id:
+          type: string
+          format: uuid
+        enabled:
+          type: boolean
+        target_temperature:
+          type: number
+          format: float
+        updated_at:
+          type: string
+          format: date-time

@@ -1,0 +1,84 @@
+openapi: 3.0.3
+info:
+  title: Наблюдение
+  version: 1.0.0
+  description: Живой просмотр камеры и список записей.
+servers:
+  - url: http://surveillance:8080
+paths:
+  /cameras/{deviceId}/stream:
+    get:
+      summary: Адрес живого видеопотока
+      operationId: getStream
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/DeviceId"
+      responses:
+        "200":
+          description: Куда подключаться за видео
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Stream"
+        "401":
+          description: Токен недействителен
+  /cameras/{deviceId}/recordings:
+    get:
+      summary: Список записей камеры
+      operationId: listRecordings
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/DeviceId"
+      responses:
+        "200":
+          description: Записи в хранилище
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Recording"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  parameters:
+    DeviceId:
+      name: deviceId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    Stream:
+      type: object
+      required: [device_id, url]
+      properties:
+        device_id:
+          type: string
+          format: uuid
+        url:
+          type: string
+          description: Адрес потока RTSP или WebRTC
+    Recording:
+      type: object
+      required: [id, device_id, object_key, started_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        device_id:
+          type: string
+          format: uuid
+        object_key:
+          type: string
+        started_at:
+          type: string
+          format: date-time
+        ended_at:
+          type: string
+          format: date-time

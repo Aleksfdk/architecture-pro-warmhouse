@@ -4,10 +4,59 @@ services:
   postgres:
     image: postgres:16-alpine
     container_name: smarthome-postgres
-  ## тут нужно добавить настройки
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./smart_home/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d smarthome"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - smarthome-network
 
   temperature-api:
-  ## тут нужно добавить приложение
+    build:
+      context: ./temperature-api
+      dockerfile: Dockerfile
+    container_name: temperature-api
+    ports:
+      - "8081:8081"
+    restart: unless-stopped
+    networks:
+      - smarthome-network
+
+  devices:
+    build:
+      context: ./devices
+      dockerfile: Dockerfile
+    container_name: smarthome-devices
+    ports:
+      - "8082:8082"
+    restart: unless-stopped
+    networks:
+      - smarthome-network
+
+  telemetry:
+    build:
+      context: ./telemetry
+      dockerfile: Dockerfile
+    container_name: smarthome-telemetry
+    environment:
+      - TEMPERATURE_API_URL=http://temperature-api:8081
+    ports:
+      - "8083:8083"
+    depends_on:
+      temperature-api:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - smarthome-network
 
   app:
     build:
@@ -17,11 +66,14 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      temperature-api:
+      devices:
+        condition: service_started
+      telemetry:
         condition: service_started
     environment:
       - DATABASE_URL=postgres://postgres:postgres@postgres:5432/smarthome
-      - TEMPERATURE_API_URL=http://temperature-api:8081
+      - TEMPERATURE_API_URL=http://telemetry:8083
+      - DEVICES_API_URL=http://devices:8082
     ports:
       - "8080:8080"
     restart: unless-stopped

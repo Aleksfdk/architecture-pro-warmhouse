@@ -1,0 +1,80 @@
+openapi: 3.0.3
+info:
+  title: Авторизация
+  version: 1.0.0
+  description: Вход пользователя и проверка токена для остальных микросервисов.
+servers:
+  - url: http://auth:8080
+paths:
+  /login:
+    post:
+      summary: Вход пользователя
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Токен выдан
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          description: Неверный email или пароль
+  /tokens/verify:
+    post:
+      summary: Проверка токена
+      description: Вызывают отопление, освещение, ворота и наблюдение.
+      operationId: verifyToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyRequest"
+      responses:
+        "200":
+          description: Токен действителен
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VerifyResponse"
+        "401":
+          description: Токен недействителен
+components:
+  schemas:
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+    LoginResponse:
+      type: object
+      required: [token, user_id]
+      properties:
+        token:
+          type: string
+        user_id:
+          type: string
+          format: uuid
+    VerifyRequest:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+    VerifyResponse:
+      type: object
+      required: [user_id]
+      properties:
+        user_id:
+          type: string
+          format: uuid
