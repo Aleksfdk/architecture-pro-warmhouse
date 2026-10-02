@@ -1,0 +1,53 @@
+openapi: 3.0.3
+info:
+  title: Интеграция устройств
+  version: 1.0.0
+  description: |
+    Внутренний API адаптера протоколов. Его вызывают отопление, освещение и ворота.
+    Наружу, к датчику партнёра, уходит уже MQTT, не этот JSON.
+servers:
+  - url: http://integration:8080
+paths:
+  /commands:
+    post:
+      summary: Доставить команду устройству
+      operationId: deliverCommand
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeviceCommand"
+      responses:
+        "202":
+          description: Команда принята адаптером
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Delivery"
+        "404":
+          description: Устройство не подключено
+components:
+  schemas:
+    DeviceCommand:
+      type: object
+      required: [device_id, type]
+      properties:
+        device_id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          description: TURN_ON, TURN_OFF, SET_TEMPERATURE, OPEN, CLOSE
+        temperature:
+          type: number
+          format: float
+    Delivery:
+      type: object
+      required: [device_id, accepted]
+      properties:
+        device_id:
+          type: string
+          format: uuid
+        accepted:
+          type: boolean

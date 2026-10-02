@@ -1,0 +1,57 @@
+openapi: 3.0.3
+info:
+  title: Ворота
+  version: 1.0.0
+  description: Открытие и закрытие ворот.
+servers:
+  - url: http://gates:8080
+paths:
+  /commands:
+    post:
+      summary: Выполнить команду ворот
+      operationId: executeGatesCommand
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GatesCommand"
+      responses:
+        "200":
+          description: Состояние после команды
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GatesState"
+        "401":
+          description: Токен недействителен
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    GatesCommand:
+      type: object
+      required: [device_id, type]
+      properties:
+        device_id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [OPEN, CLOSE]
+    GatesState:
+      type: object
+      required: [device_id, open]
+      properties:
+        device_id:
+          type: string
+          format: uuid
+        open:
+          type: boolean
+        updated_at:
+          type: string
+          format: date-time

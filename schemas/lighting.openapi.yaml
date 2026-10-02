@@ -1,0 +1,57 @@
+openapi: 3.0.3
+info:
+  title: Освещение
+  version: 1.0.0
+  description: Включение и выключение света.
+servers:
+  - url: http://lighting:8080
+paths:
+  /commands:
+    post:
+      summary: Выполнить команду освещения
+      operationId: executeLightingCommand
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LightingCommand"
+      responses:
+        "200":
+          description: Состояние после команды
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LightingState"
+        "401":
+          description: Токен недействителен
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    LightingCommand:
+      type: object
+      required: [device_id, type]
+      properties:
+        device_id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [TURN_ON, TURN_OFF]
+    LightingState:
+      type: object
+      required: [device_id, enabled]
+      properties:
+        device_id:
+          type: string
+          format: uuid
+        enabled:
+          type: boolean
+        updated_at:
+          type: string
+          format: date-time

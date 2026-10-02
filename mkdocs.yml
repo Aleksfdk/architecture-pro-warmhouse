@@ -1,0 +1,10 @@
+site_name: Тёплый дом
+theme: readthedocs
+markdown_extensions:
+  - md_in_html
+  - plantuml_markdown
+plugins:
+  - plantuml:
+      puml_url: https://www.plantuml.com/plantuml/
+      theme:
+        enabled: false
